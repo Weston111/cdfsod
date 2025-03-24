@@ -3,7 +3,7 @@ _base_ = [
     '../_base_/schedules/schedule_1x.py', '../_base_/default_runtime.py'
 ]
 pretrained = 'https://github.com/SwinTransformer/storage/releases/download/v1.0.0/swin_tiny_patch4_window7_224.pth'  # noqa
-lang_model_name = 'bert-base-uncased'
+lang_model_name = 'model/bert-base-uncased'
 
 model = dict(
     type='GroundingDINO',
@@ -199,7 +199,7 @@ coco_od_dataset = dict(
 
 train_dataloader = dict(
     _delete_=True,
-    batch_size=4,
+    batch_size=1,
     num_workers=4,
     persistent_workers=True,
     sampler=dict(type='DefaultSampler', shuffle=True),
@@ -207,6 +207,7 @@ train_dataloader = dict(
     dataset=dict(type='ConcatDataset', datasets=[coco_od_dataset]))
 
 val_dataloader = dict(
+    batch_size=2,
     dataset=dict(pipeline=test_pipeline, return_classes=True))
 test_dataloader = val_dataloader
 
@@ -242,6 +243,7 @@ train_cfg = dict(
 # NOTE: `auto_scale_lr` is for automatically scaling LR,
 # USER SHOULD NOT CHANGE ITS VALUES.
 # base_batch_size = (16 GPUs) x (2 samples per GPU)
-auto_scale_lr = dict(base_batch_size=64)
+# auto_scale_lr = dict(base_batch_size=64)
+auto_scale_lr = dict(base_batch_size=8)
 
 default_hooks = dict(visualization=dict(type='GroundingVisualizationHook'))

@@ -57,6 +57,12 @@ def parse_args():
     # will pass the `--local-rank` parameter to `tools/train.py` instead
     # of `--local_rank`.
     parser.add_argument('--local_rank', '--local-rank', type=int, default=0)
+    parser.add_argument(
+        '--json-file',
+        type=str,
+        default=None,
+        help='json file for evaluation'
+    )
     args = parser.parse_args()
     if 'LOCAL_RANK' not in os.environ:
         os.environ['LOCAL_RANK'] = str(args.local_rank)
@@ -123,7 +129,10 @@ def main():
             cfg.tta_pipeline[-1] = flip_tta
         cfg.model = ConfigDict(**cfg.tta_model, module=cfg.model)
         cfg.test_dataloader.dataset.pipeline = cfg.tta_pipeline
-
+    if args.json_file is not None:
+        cfg.val_evaluator.outfile_prefix = args.json_file
+        cfg.val_evaluator.format_only = True
+        cfg.test_evaluator = cfg.val_evaluator
     # build the runner from config
     if 'runner_type' not in cfg:
         # build the default runner

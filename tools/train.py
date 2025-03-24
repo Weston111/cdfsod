@@ -1,7 +1,14 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import argparse
+import copy
 import os
 import os.path as osp
+import time
+import warnings
+
+import torch
+import mmcv
+import mmengine
 
 from mmengine.config import Config, DictAction
 from mmengine.registry import RUNNERS
@@ -9,7 +16,7 @@ from mmengine.runner import Runner
 
 from mmdet.utils import setup_cache_size_limit_of_dynamo
 import ipdb
-import torch
+
 torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False  # 关闭CUDNN的自动调优，确保每次运行都一致  
 
@@ -70,6 +77,13 @@ def parse_args():
 def main():
     args = parse_args()
 
+    # 添加这行代码，允许scatter_add操作不需要确定性实现
+    # torch.backends.cudnn.allow_tf32 = False
+    # 
+    # 设置PyTorch只警告而不报错
+    # os.environ["PYTORCH_WARN_ONLY_DETERMINISTIC_ALGORITHMS"] = "1"
+    # torch.use_deterministic_algorithms(True)
+    
     # Reduce the number of repeated compilations and improve
     # training speed.
     setup_cache_size_limit_of_dynamo()
