@@ -261,8 +261,11 @@ class CocoMetric(BaseMetric):
                 segm_json_results.append(data)
 
         result_files = dict()
-        result_files['bbox'] = f'{outfile_prefix}.bbox.json'
-        result_files['proposal'] = f'{outfile_prefix}.bbox.json'
+        # result_files['bbox'] = f'{outfile_prefix}.bbox.json'
+        # result_files['proposal'] = f'{outfile_prefix}.bbox.json'
+
+        result_files['bbox'] = f'{outfile_prefix}.json'
+        result_files['proposal'] = f'{outfile_prefix}.json'
         dump(bbox_json_results, result_files['bbox'])
 
         if segm_json_results is not None:

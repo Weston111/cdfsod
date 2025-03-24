@@ -13,7 +13,7 @@ from mmdet.engine.hooks.utils import trigger_visualization_hook
 from mmdet.evaluation import DumpDetResults
 from mmdet.registry import RUNNERS
 from mmdet.utils import setup_cache_size_limit_of_dynamo
-
+import ipdb
 
 # TODO: support fuse_conv_bn and format_only
 def parse_args():
@@ -89,7 +89,6 @@ def main():
 
     if args.show or args.show_dir:
         cfg = trigger_visualization_hook(cfg, args)
-
     if args.tta:
 
         if 'tta_model' not in cfg:
@@ -136,8 +135,8 @@ def main():
 
     # add `DumpResults` dummy metric
     if args.out is not None:
-        assert args.out.endswith(('.pkl', '.pickle')), \
-            'The dump file must be a pkl file.'
+        # assert args.out.endswith(('.pkl', '.pickle')), \
+        #     'The dump file must be a pkl file.'
         runner.test_evaluator.metrics.append(
             DumpDetResults(out_file_path=args.out))
 

@@ -8,7 +8,7 @@ from mmengine.fileio import get_local_path
 from mmdet.registry import DATASETS
 from .api_wrappers import COCO
 from .base_det_dataset import BaseDetDataset
-
+import ipdb
 
 @DATASETS.register_module()
 class CocoDataset(BaseDetDataset):
@@ -126,7 +126,6 @@ class CocoDataset(BaseDetDataset):
         data_info['seg_map_path'] = seg_map_path
         data_info['height'] = img_info['height']
         data_info['width'] = img_info['width']
-
         if self.return_classes:
             data_info['text'] = self.metainfo['classes']
             data_info['caption_prompt'] = self.caption_prompt

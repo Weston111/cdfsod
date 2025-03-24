@@ -536,6 +536,75 @@ class GroundingDINOHead(DINOHead):
         bbox_targets = torch.cat(bbox_targets_list, 0)
         bbox_weights = torch.cat(bbox_weights_list, 0)
 
+        # 检查是否包含伪标签的loss权重
+        has_loss_weights = False
+        for gt_instances in batch_gt_instances:
+            if hasattr(gt_instances, 'loss_weights'):
+                has_loss_weights = True
+                break
+        
+        # 如果有伪标签，使用自定义的权重调整标签权重
+        if has_loss_weights:
+            all_loss_weights = []
+            for i, gt_instances in enumerate(batch_gt_instances):
+                if hasattr(gt_instances, 'loss_weights'):
+                    # 将loss_weights复制和扩展到与label_weights_list[i]维度一致
+                    gt_loss_weights = gt_instances.loss_weights.to(label_weights_list[i].device)
+                    
+                    # 创建一个填充了1.0的张量
+                    expanded_weights = torch.ones_like(label_weights_list[i])
+                    
+                    # 获取正样本索引
+                    pos_inds = (label_weights_list[i] > 0).nonzero(as_tuple=True)[0]
+                    
+                    # 只对正样本应用权重
+                    if len(pos_inds) > 0 and len(gt_loss_weights) > 0:
+                        # 确保权重数量与正样本数量匹配
+                        if len(gt_loss_weights) >= len(pos_inds):
+                            expanded_weights[pos_inds] = gt_loss_weights[:len(pos_inds)]
+                        else:
+                            # 如果权重数量不足，只应用可用的权重
+                            expanded_weights[pos_inds[:len(gt_loss_weights)]] = gt_loss_weights
+                    
+                    all_loss_weights.append(expanded_weights)
+                else:
+                    # 如果没有自定义权重，使用全1权重
+                    all_loss_weights.append(torch.ones_like(label_weights_list[i]))
+            
+            # 更新标签权重
+            adjusted_label_weights = torch.stack(all_loss_weights, 0) * label_weights
+            label_weights = adjusted_label_weights
+            
+            # 更新bbox权重
+            adjusted_bbox_weights = []
+            for gt_instances, bbox_weight in zip(batch_gt_instances, bbox_weights_list):
+                if hasattr(gt_instances, 'loss_weights') and len(gt_instances.loss_weights) > 0:
+                    # 获取bbox对应的权重
+                    gt_loss_weights = gt_instances.loss_weights.to(bbox_weight.device)
+                    
+                    # 扩展bbox权重的维度以便与gt_loss_weights广播
+                    expanded_bbox_weight = bbox_weight.clone()
+                    
+                    # 对非零权重的样本应用
+                    non_zero_inds = (bbox_weight.sum(-1) > 0).nonzero(as_tuple=True)[0]
+                    if len(non_zero_inds) > 0 and len(gt_loss_weights) > 0:
+                        # 确保权重数量与有效样本数量匹配
+                        if len(gt_loss_weights) >= len(non_zero_inds):
+                            for i, idx in enumerate(non_zero_inds):
+                                if i < len(gt_loss_weights):
+                                    expanded_bbox_weight[idx] *= gt_loss_weights[i]
+                        else:
+                            # 如果权重数量不足，只应用可用的权重
+                            for i, idx in enumerate(non_zero_inds[:len(gt_loss_weights)]):
+                                expanded_bbox_weight[idx] *= gt_loss_weights[i]
+                                
+                    adjusted_bbox_weights.append(expanded_bbox_weight)
+                else:
+                    adjusted_bbox_weights.append(bbox_weight)
+            
+            # 更新bbox权重
+            bbox_weights = torch.cat(adjusted_bbox_weights, 0)
+
         # ===== this change =====
         # Loss is not computed for the padded regions of the text.
         assert (self.text_masks.dim() == 2)
@@ -634,6 +703,76 @@ class GroundingDINOHead(DINOHead):
         label_weights = torch.stack(label_weights_list, 0)
         bbox_targets = torch.cat(bbox_targets_list, 0)
         bbox_weights = torch.cat(bbox_weights_list, 0)
+        
+        # 检查是否包含伪标签的loss权重
+        has_loss_weights = False
+        for gt_instances in batch_gt_instances:
+            if hasattr(gt_instances, 'loss_weights'):
+                has_loss_weights = True
+                break
+        
+        # 如果有伪标签，使用自定义的权重调整标签权重
+        if has_loss_weights:
+            all_loss_weights = []
+            for i, gt_instances in enumerate(batch_gt_instances):
+                if hasattr(gt_instances, 'loss_weights'):
+                    # 将loss_weights复制和扩展到与label_weights_list[i]维度一致
+                    gt_loss_weights = gt_instances.loss_weights.to(label_weights_list[i].device)
+                    
+                    # 创建一个填充了1.0的张量
+                    expanded_weights = torch.ones_like(label_weights_list[i])
+                    
+                    # 获取正样本索引
+                    pos_inds = (label_weights_list[i] > 0).nonzero(as_tuple=True)[0]
+                    
+                    # 只对正样本应用权重
+                    if len(pos_inds) > 0 and len(gt_loss_weights) > 0:
+                        # 确保权重数量与正样本数量匹配
+                        if len(gt_loss_weights) >= len(pos_inds):
+                            expanded_weights[pos_inds] = gt_loss_weights[:len(pos_inds)]
+                        else:
+                            # 如果权重数量不足，只应用可用的权重
+                            expanded_weights[pos_inds[:len(gt_loss_weights)]] = gt_loss_weights
+                    
+                    all_loss_weights.append(expanded_weights)
+                else:
+                    # 如果没有自定义权重，使用全1权重
+                    all_loss_weights.append(torch.ones_like(label_weights_list[i]))
+            
+            # 更新标签权重
+            adjusted_label_weights = torch.stack(all_loss_weights, 0) * label_weights
+            label_weights = adjusted_label_weights
+            
+            # 更新bbox权重
+            adjusted_bbox_weights = []
+            for gt_instances, bbox_weight in zip(batch_gt_instances, bbox_weights_list):
+                if hasattr(gt_instances, 'loss_weights') and len(gt_instances.loss_weights) > 0:
+                    # 获取bbox对应的权重
+                    gt_loss_weights = gt_instances.loss_weights.to(bbox_weight.device)
+                    
+                    # 扩展bbox权重的维度以便与gt_loss_weights广播
+                    expanded_bbox_weight = bbox_weight.clone()
+                    
+                    # 对非零权重的样本应用
+                    non_zero_inds = (bbox_weight.sum(-1) > 0).nonzero(as_tuple=True)[0]
+                    if len(non_zero_inds) > 0 and len(gt_loss_weights) > 0:
+                        # 确保权重数量与有效样本数量匹配
+                        if len(gt_loss_weights) >= len(non_zero_inds):
+                            for i, idx in enumerate(non_zero_inds):
+                                if i < len(gt_loss_weights):
+                                    expanded_bbox_weight[idx] *= gt_loss_weights[i]
+                        else:
+                            # 如果权重数量不足，只应用可用的权重
+                            for i, idx in enumerate(non_zero_inds[:len(gt_loss_weights)]):
+                                expanded_bbox_weight[idx] *= gt_loss_weights[i]
+                                
+                    adjusted_bbox_weights.append(expanded_bbox_weight)
+                else:
+                    adjusted_bbox_weights.append(bbox_weight)
+            
+            # 更新bbox权重
+            bbox_weights = torch.cat(adjusted_bbox_weights, 0)
+            
         # ===== this change =====
         # Loss is not computed for the padded regions of the text.
         assert (self.text_masks.dim() == 2)

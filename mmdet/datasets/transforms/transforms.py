@@ -23,7 +23,7 @@ from mmdet.registry import TRANSFORMS
 from mmdet.structures.bbox import HorizontalBoxes, autocast_box_type
 from mmdet.structures.mask import BitmapMasks, PolygonMasks
 from mmdet.utils import log_img_scale
-
+import ipdb
 try:
     from imagecorruptions import corrupt
 except ImportError:
@@ -3115,6 +3115,7 @@ class CopyPaste(BaseTransform):
         Returns:
             dict: Updated result dict.
         """
+        # ipdb.set_trace()
         dst_img = dst_results['img']
         dst_bboxes = dst_results['gt_bboxes']
         dst_labels = dst_results['gt_bboxes_labels']
@@ -3129,7 +3130,8 @@ class CopyPaste(BaseTransform):
 
         if len(src_bboxes) == 0:
             return dst_results
-
+        # print(src_masks.masks.shape)
+        # print(dst_masks.masks.shape)
         # update masks and generate bboxes from updated masks
         composed_mask = np.where(np.any(src_masks.masks, axis=0), 1, 0)
         updated_dst_masks = self._get_updated_masks(dst_masks, composed_mask)

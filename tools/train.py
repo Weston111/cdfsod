@@ -8,6 +8,10 @@ from mmengine.registry import RUNNERS
 from mmengine.runner import Runner
 
 from mmdet.utils import setup_cache_size_limit_of_dynamo
+import ipdb
+import torch
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = False  # 关闭CUDNN的自动调优，确保每次运行都一致  
 
 
 def parse_args():
@@ -46,6 +50,12 @@ def parse_args():
         choices=['none', 'pytorch', 'slurm', 'mpi'],
         default='none',
         help='job launcher')
+    parser.add_argument(
+        '--json-file',
+        type=str,
+        default=None,
+        help='json file for evaluation'
+    )
     # When using PyTorch version >= 2.0.0, the `torch.distributed.launch`
     # will pass the `--local-rank` parameter to `tools/train.py` instead
     # of `--local_rank`.
@@ -95,7 +105,6 @@ def main():
                                '"auto_scale_lr.enable" or '
                                '"auto_scale_lr.base_batch_size" in your'
                                ' configuration file.')
-
     # resume is determined in this priority: resume from > auto_resume
     if args.resume == 'auto':
         cfg.resume = True
@@ -103,6 +112,12 @@ def main():
     elif args.resume is not None:
         cfg.resume = True
         cfg.load_from = args.resume
+    # ipdb.set_trace()
+    if args.json_file is not None:
+        cfg.val_evaluator.outfile_prefix = args.json_file
+        cfg.val_evaluator.format_only = True
+        cfg.test_evaluator = cfg.val_evaluator
+        # val_evaluator = dict(ann_file=data_root + 'annotations/test.json',format_only=True,outfile_prefix='dataset1_5shot_llm')
 
     # build the runner from config
     if 'runner_type' not in cfg:
@@ -112,7 +127,6 @@ def main():
         # build customized runner from the registry
         # if 'runner_type' is set in the cfg
         runner = RUNNERS.build(cfg)
-
     # start training
     runner.train()
 

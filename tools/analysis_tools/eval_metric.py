@@ -24,6 +24,10 @@ def parse_args():
         'It also allows nested list/tuple values, e.g. key="[(a,b),(c,d)]" '
         'Note that the quotation marks are necessary and that no white space '
         'is allowed.')
+    parser.add_argument(
+        '--show-per-class',
+        action='store_true',
+        help='Show per-class evaluation results')
     args = parser.parse_args()
     return args
 
@@ -39,11 +43,36 @@ def main():
 
     dataset = DATASETS.build(cfg.test_dataloader.dataset)
     predictions = mmengine.load(args.pkl_results)
+    # 确保评估器配置为显示每个类别的指标
+    if args.show_per_class:
+        if isinstance(cfg.val_evaluator, list):
+            for evaluator_cfg in cfg.val_evaluator:
+                if 'classwise' in evaluator_cfg:
+                    evaluator_cfg['classwise'] = True
+                else:
+                    evaluator_cfg['classwise'] = True
+        else:
+            if 'classwise' in cfg.val_evaluator:
+                cfg.val_evaluator['classwise'] = True
+            else:
+                cfg.val_evaluator['classwise'] = True
+
 
     evaluator = Evaluator(cfg.val_evaluator)
     evaluator.dataset_meta = dataset.metainfo
     eval_results = evaluator.offline_evaluate(predictions)
     print(eval_results)
+    # 打印每个类别的评估结果（如果存在）
+    # if args.show_per_class and 'classwise_results' in eval_results:
+    #     print("\n每个类别的评估结果:")
+    #     class_names = dataset.metainfo.get('classes', None)
+    #     classwise_results = eval_results['classwise_results']
+        
+    #     for i, (class_id, metrics) in enumerate(classwise_results.items()):
+    #         class_name = class_names[i] if class_names else f"类别 {class_id}"
+    #         print(f"\n{class_name}:")
+    #         for metric_name, value in metrics.items():
+    #             print(f"  {metric_name}: {value:.4f}")
 
 
 if __name__ == '__main__':
