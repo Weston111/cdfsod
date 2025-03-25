@@ -81,7 +81,7 @@ test_evaluator = val_evaluator
 max_epoch = 2
 
 train_cfg = dict(_delete_=True,
-    type='EpochBasedTrainLoop', max_epochs=max_epoch, val_interval=1)
+    type='EpochBasedTrainLoop', max_epochs=max_epoch, val_interval=max_epoch+1)
 
 default_hooks = dict(
     # _delete_=True,

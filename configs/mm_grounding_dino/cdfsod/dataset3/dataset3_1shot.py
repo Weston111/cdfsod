@@ -65,12 +65,7 @@ train_dataloader = dict(
         ann_file='annotations/1_shot.json',
         data_prefix=dict(img='train/')))
 
-# val_dataloader = dict(
-#     dataset=dict(
-#         metainfo=metainfo,
-#         data_root=data_root,
-#         ann_file='annotations/test_annotations.json',
-#         data_prefix=dict(img='test/')))
+
 val_dataloader = dict(
     dataset=dict(
         metainfo=metainfo,

@@ -124,3 +124,4 @@ custom_hooks = [
     dict(type='AWPHook')
 ]
 log_processor = dict(by_epoch=True)
+load_from = './model/grounding_dino_swin-l_pretrain_obj365_goldg-34dcdc53.pth'
